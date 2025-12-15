@@ -6,19 +6,8 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local LibDBIcon = LibStub("LibDBIcon-1.0", true)
 local LDB = LibStub("LibDataBroker-1.1")
 
--- Import Constants (loaded lazily to avoid circular dependencies)
--- Note: Constants are loaded in functions that need them
-local Constants = nil
-local function get_constants()
-    if not Constants then
-        Constants = require("Utils.Constants")
-    end
-    return Constants
-end
-
--- Use constants from Constants module (will be loaded when needed)
-local PROFILE_EXPORT_VERSION = 1  -- Default, will use Constants when loaded
-local LAYOUT_EXPORT_VERSION = 1   -- Default, will use Constants when loaded
+local PROFILE_EXPORT_VERSION = 1
+local LAYOUT_EXPORT_VERSION = 1
 
 local get_layout_meta
 local layout_type_labels = {
@@ -827,52 +816,6 @@ local options = {
                 print("KeyUI: Stay open in combat " .. status)
             end,
         },
-        custom_font = {
-            type = "input",
-            name = "Custom Font (Regular)",
-            desc = "Path to custom font file for regular text (supports Korean, Chinese, etc.). Example: Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF",
-            order = 11,
-            get = function() return keyui_settings.custom_font or "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF" end,
-            set = function(_, value)
-                if value and value ~= "" then
-                    keyui_settings.custom_font = value
-                    -- Refresh all keys to apply new font
-                    if addon.open then
-                        addon:refresh_keys()
-                    end
-                    print("KeyUI: Custom font set to: " .. value)
-                else
-                    keyui_settings.custom_font = "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF"
-                    if addon.open then
-                        addon:refresh_keys()
-                    end
-                    print("KeyUI: Custom font reset to default")
-                end
-            end,
-        },
-        custom_font_condensed = {
-            type = "input",
-            name = "Custom Font (Condensed)",
-            desc = "Path to custom font file for condensed text (supports Korean, Chinese, etc.). Example: Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF",
-            order = 12,
-            get = function() return keyui_settings.custom_font_condensed or "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF" end,
-            set = function(_, value)
-                if value and value ~= "" then
-                    keyui_settings.custom_font_condensed = value
-                    -- Refresh all keys to apply new font
-                    if addon.open then
-                        addon:refresh_keys()
-                    end
-                    print("KeyUI: Custom condensed font set to: " .. value)
-                else
-                    keyui_settings.custom_font_condensed = "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF"
-                    if addon.open then
-                        addon:refresh_keys()
-                    end
-                    print("KeyUI: Custom condensed font reset to default")
-                end
-            end,
-        },
         show_keyboard = {
             type = "toggle",
             name = "Show Keyboard",
@@ -1094,15 +1037,12 @@ function addon:load_spellbook()
 
             for j = offset + 1, offset + numSlots do
                 local spellBookItemInfo = C_SpellBook.GetSpellBookItemInfo(j, Enum.SpellBookSpellBank.Player)
-                -- Nil-check for spellBookItemInfo
-                if spellBookItemInfo then
-                    local spellName = spellBookItemInfo.name
-                    local spellID = spellBookItemInfo.spellID
-                    local isPassive = spellBookItemInfo.isPassive
+                local spellName = spellBookItemInfo.name
+                local spellID = spellBookItemInfo.spellID
+                local isPassive = spellBookItemInfo.isPassive
 
-                    if spellName and not isPassive then
-                        table.insert(addon.spells[name], { name = spellName, id = spellID })
-                    end
+                if spellName and not isPassive then
+                    table.insert(addon.spells[name], { name = spellName, id = spellID })
                 end
             end
         end
@@ -1366,12 +1306,12 @@ function addon:create_tooltip()
     keyui_tooltip_frame.key = keyui_tooltip_frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     keyui_tooltip_frame.key:SetPoint("CENTER", keyui_tooltip_frame, "CENTER", 0, 10)
     keyui_tooltip_frame.key:SetTextColor(1, 1, 1)
-    keyui_tooltip_frame.key:SetFont(addon:GetCustomFont(), 16)
+    keyui_tooltip_frame.key:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF", 16)
 
     keyui_tooltip_frame.binding = keyui_tooltip_frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     keyui_tooltip_frame.binding:SetPoint("CENTER", keyui_tooltip_frame, "CENTER", 0, -10)
     keyui_tooltip_frame.binding:SetTextColor(1, 1, 1)
-    keyui_tooltip_frame.binding:SetFont(addon:GetCustomFont(), 16)
+    keyui_tooltip_frame.binding:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF", 16)
 
     -- Hide the GameTooltip when this custom tooltip hides.
     keyui_tooltip_frame:SetScript("OnHide", function() GameTooltip:Hide() end)
@@ -1430,12 +1370,12 @@ function addon:button_mouse_over(button)
     addon.keyui_tooltip_frame:Show()
 
     -- Display the GameTooltip if the hovered button has an active slot
-    if addon.current_hovered_button and addon.current_hovered_button.active_slot then
+    if addon.current_hovered_button.active_slot then
         GameTooltip:SetOwner(addon.current_hovered_button, "ANCHOR_NONE")
         GameTooltip:SetPoint("TOPLEFT", button, "BOTTOMLEFT")
         GameTooltip:SetAction(addon.current_hovered_button.active_slot) -- Use SetAction for ActionButtons
         GameTooltip:Show()
-    elseif addon.current_hovered_button and addon.current_hovered_button.spellid then
+    elseif addon.current_hovered_button.spellid then
         GameTooltip:SetOwner(addon.current_hovered_button, "ANCHOR_NONE")
         GameTooltip:SetPoint("TOPLEFT", button, "BOTTOMLEFT")
         GameTooltip:SetSpellByID(addon.current_hovered_button.spellid)
@@ -1649,17 +1589,11 @@ function addon:process_actionbutton_slot(slot, button)
     local adjusted_slot = addon:get_action_button_slot(slot)
     button.slot = adjusted_slot
 
-    -- Check if the slot has an action assigned (combat-safe)
-    local APIHelpers = require("Utils.APIHelpers")
-    local Validators = require("Utils.Validators")
-    
-    if Validators.validate_slot(adjusted_slot) and APIHelpers.safe_has_action(adjusted_slot) then
-        local texture = APIHelpers.safe_get_action_texture(adjusted_slot)
-        if texture then
-            button.active_slot = adjusted_slot
-            button.icon:SetTexture(texture)
-            button.icon:Show()
-        end
+    -- Check if the slot has an action assigned
+    if HasAction(adjusted_slot) then
+        button.active_slot = adjusted_slot
+        button.icon:SetTexture(GetActionTexture(adjusted_slot))
+        button.icon:Show()
     end
 end
 
@@ -1724,17 +1658,11 @@ function addon:process_multiactionbar_slot(bar, bar_button, button)
 
     button.slot = slot
 
-    -- Check if the slot has an action assigned (combat-safe)
-    local APIHelpers = require("Utils.APIHelpers")
-    local Validators = require("Utils.Validators")
-    
-    if Validators.validate_slot(slot) and APIHelpers.safe_has_action(slot) then
-        local texture = APIHelpers.safe_get_action_texture(slot)
-        if texture then
-            button.active_slot = slot
-            button.icon:SetTexture(texture)
-            button.icon:Show()
-        end
+    -- Check if the slot has an action assigned
+    if slot and HasAction(slot) then
+        button.active_slot = slot
+        button.icon:SetTexture(GetActionTexture(slot))
+        button.icon:Show()
     end
 end
 
@@ -1752,21 +1680,9 @@ function addon:process_pet_action_slot(binding, button)
     local pet_action_index = tonumber(binding:match("^BONUSACTIONBUTTON(%d+)$"))
     if not pet_action_index then return end
 
-    -- Get pet action information (combat-safe)
-    local APIHelpers = require("Utils.APIHelpers")
-    local pet_info = APIHelpers.safe_get_pet_action_info(pet_action_index)
-    
-    if not pet_info then
-        return
-    end
-    
-    local pet_name = pet_info.name
-    local pet_texture = pet_info.texture
-    local is_token = pet_info.is_token
-    local is_active = pet_info.is_active
-    local auto_cast_allowed = pet_info.auto_cast_allowed
-    local auto_cast_enabled = pet_info.auto_cast_enabled
-    local spell_id = pet_info.spell_id
+    -- Get pet action information
+    local pet_name, pet_texture, is_token, is_active, auto_cast_allowed, auto_cast_enabled, spell_id =
+        GetPetActionInfo(pet_action_index)
 
     -- Handle the texture if it's a token
     if is_token then
@@ -1796,18 +1712,7 @@ function addon:process_shapeshift_slot(slot, button)
     if not slot then return end
 
     -- Retrieve information about the shapeshift form
-    -- Get shapeshift form info (combat-safe)
-    local APIHelpers = require("Utils.APIHelpers")
-    local form_info = APIHelpers.safe_get_shapeshift_form_info(slot)
-    
-    if not form_info then
-        return
-    end
-    
-    local icon = form_info.icon
-    local is_active = form_info.is_active
-    local is_castable = form_info.is_castable
-    local spellID = form_info.spell_id
+    local icon, is_active, is_castable, spellID = GetShapeshiftFormInfo(slot)
 
     if icon then
         button.icon:SetTexture(icon)         -- Set the icon texture
@@ -1852,11 +1757,7 @@ function addon:process_elvui(binding, button)
         if elvUIButton then
             local actionID = elvUIButton._state_action
             if elvUIButton._state_type == "action" and actionID then
-                local APIHelpers = require("Utils.APIHelpers")
-                local texture = APIHelpers.safe_get_action_texture(actionID)
-                if texture then
-                    button.icon:SetTexture(texture)
-                end
+                button.icon:SetTexture(GetActionTexture(actionID))
                 button.icon:Show()
                 button.slot = actionID
             end
@@ -1868,15 +1769,9 @@ end
 function addon:process_bartender(binding, button)
     local bt4_slot = binding:match("CLICK BT4Button(%d+):Keybind")
     button.slot = tonumber(bt4_slot)  -- Set the slot for BT4Button
-    local APIHelpers = require("Utils.APIHelpers")
-    local Validators = require("Utils.Validators")
-    
-    if Validators.validate_slot(button.slot) and APIHelpers.safe_has_action(button.slot) then
-        local texture = APIHelpers.safe_get_action_texture(button.slot)
-        if texture then
-            button.active_slot = button.slot -- Active if there's an action
-            button.icon:SetTexture(texture)
-        end
+    if HasAction(button.slot) then
+        button.active_slot = button.slot -- Active if there's an action
+        button.icon:SetTexture(GetActionTexture(button.slot))
         button.icon:Show()
     end
 end
@@ -1886,12 +1781,9 @@ function addon:process_dominos(binding, button)
     local dominos_slot = tonumber(binding:match("DominosActionButton(%d+)"))
     if dominos_slot then
         button.slot = dominos_slot  -- Set the slot for DominosActionButton
-        local APIHelpers = require("Utils.APIHelpers")
-        local Validators = require("Utils.Validators")
-        
-        if Validators.validate_slot(button.slot) and APIHelpers.safe_has_action(button.slot) then
+        if HasAction(button.slot) then
             button.active_slot = button.slot  -- Mark as active if an action exists for the slot
-            local actionTexture = APIHelpers.safe_get_action_texture(button.slot)
+            local actionTexture = GetActionTexture(button.slot)
             if actionTexture then
                 button.icon:SetTexture(actionTexture)  -- Set the action icon
                 button.icon:Show()                     -- Show the icon
@@ -2017,14 +1909,14 @@ function addon:update_button_key_text(button)
     local max_allowed_chars = math.floor(button:GetWidth() / 9)
     local combined_text = button.short_key:GetText() or "" -- Combined text with modifiers if present / Use empty string if GetText() returns nil
 
-        -- Use Condensed font if the combined text exceeds max_allowed_chars
-        if string.len(combined_text) > max_allowed_chars then
-            -- Use the Condensed font for longer text
-            button.short_key:SetFont(addon:GetCustomFontCondensed(), 16, "OUTLINE")
-        else
-            -- Use the Regular font for shorter text
-            button.short_key:SetFont(addon:GetCustomFont(), 16, "OUTLINE")
-        end
+    -- Use Condensed font if the combined text exceeds max_allowed_chars
+    if string.len(combined_text) > max_allowed_chars then
+        -- Use the Condensed font for longer text
+        button.short_key:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF", 16, "OUTLINE")
+    else
+        -- Use the Regular font for shorter text
+        button.short_key:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF", 16, "OUTLINE")
+    end
 end
 
 -- Sets and displays the interface action label
@@ -2123,12 +2015,10 @@ function addon:update_modifier_string()
     if addon.modif.ALT then table.insert(modifiers, "ALT-") end
     if addon.modif.CTRL then table.insert(modifiers, "CTRL-") end
     if addon.modif.SHIFT then table.insert(modifiers, "SHIFT-") end
-    if addon.modif.CMD then table.insert(modifiers, "CMD-") end
     addon.current_modifier_string = table.concat(modifiers)
 end
 
 -- Define modifier keys used in HandleKeyPress and HandleKeyRelease
--- Note: On macOS, CMD key is typically mapped to LCOMMAND/RCOMMAND
 local modifier_keys = {
     LALT = { mod = "ALT", control_key = "alt_cb" },
     RALT = { mod = "ALT", control_key = "alt_cb" },
@@ -2136,10 +2026,6 @@ local modifier_keys = {
     RCTRL = { mod = "CTRL", control_key = "ctrl_cb" },
     LSHIFT = { mod = "SHIFT", control_key = "shift_cb" },
     RSHIFT = { mod = "SHIFT", control_key = "shift_cb" },
-    LCOMMAND = { mod = "CMD", control_key = "cmd_cb" },
-    RCOMMAND = { mod = "CMD", control_key = "cmd_cb" },
-    LMETA = { mod = "CMD", control_key = "cmd_cb" },
-    RMETA = { mod = "CMD", control_key = "cmd_cb" },
 }
 
 -- Function to handle key press events
@@ -2239,11 +2125,6 @@ function addon:handle_gamepad_down(frame, key)
     -- Check for SHIFT modifier
     if IsShiftKeyDown() then
         modifier = modifier .. "SHIFT-"
-    end
-
-    -- Check for CMD (Meta) modifier (macOS)
-    if addon.modif.CMD then
-        modifier = modifier .. "CMD-"
     end
 
     -- Set the raw key for Gamepad input
@@ -2537,14 +2418,12 @@ eventFrame:RegisterEvent("PET_BAR_UPDATE")
 eventFrame:SetScript("OnEvent", function(self, event, ...)
     if addon.open then
         if event == "UPDATE_BONUS_ACTIONBAR" then --refresh_keys only
-            -- Check the BonusBarOffset (combat-safe)
-            local APIHelpers = require("Utils.APIHelpers")
-            addon.bonusbar_offset = APIHelpers.safe_get_bonus_bar_offset()
+            -- Check the BonusBarOffset
+            addon.bonusbar_offset = GetBonusBarOffset()
             addon:refresh_keys()
         elseif event == "ACTIONBAR_PAGE_CHANGED" then --refresh_keys only
-            -- Update the current action bar page (combat-safe)
-            local APIHelpers = require("Utils.APIHelpers")
-            addon.current_actionbar_page = APIHelpers.safe_get_action_bar_page()
+            -- Update the current action bar page
+            addon.current_actionbar_page = GetActionBarPage()
             addon:refresh_keys()
         elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then --refresh_layouts
             addon:refresh_layouts()
@@ -2572,7 +2451,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
                 -- check if modifier are enabled
                 if keyui_settings.listen_to_modifier == true then
                     -- check if the modifier checkboxes are empty
-                    if addon.alt_checkbox == false and addon.ctrl_checkbox == false and addon.shift_checkbox == false and addon.cmd_checkbox == false then
+                    if addon.alt_checkbox == false and addon.ctrl_checkbox == false and addon.shift_checkbox == false then
                         if state == 1 then
                             -- Key press event
                             handle_key_press(key)
@@ -2597,21 +2476,18 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         end
     else
         if event == "UPDATE_BONUS_ACTIONBAR" then
-            -- Check the BonusBarOffset (combat-safe)
-            local APIHelpers = require("Utils.APIHelpers")
-            addon.bonusbar_offset = APIHelpers.safe_get_bonus_bar_offset()
+            -- Check the BonusBarOffset
+            addon.bonusbar_offset = GetBonusBarOffset()
         elseif event == "ACTIONBAR_PAGE_CHANGED" then
-            -- Update the current action bar page (combat-safe)
-            local APIHelpers = require("Utils.APIHelpers")
-            addon.current_actionbar_page = APIHelpers.safe_get_action_bar_page()
+            -- Update the current action bar page
+            addon.current_actionbar_page = GetActionBarPage()
         elseif event == "PLAYER_LOGIN" then
             -- Check which class
             addon.class_name = UnitClassBase("player")
-            -- Check the BonusBarOffset (combat-safe)
-            local APIHelpers = require("Utils.APIHelpers")
-            addon.bonusbar_offset = APIHelpers.safe_get_bonus_bar_offset()
-            -- Update the current action bar page (combat-safe)
-            addon.current_actionbar_page = APIHelpers.safe_get_action_bar_page()
+            -- Check the BonusBarOffset
+            addon.bonusbar_offset = GetBonusBarOffset()
+            -- Update the current action bar page
+            addon.current_actionbar_page = GetActionBarPage()
         elseif event == "PLAYER_REGEN_ENABLED" then
             addon.in_combat = false
         end

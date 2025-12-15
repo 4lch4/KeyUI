@@ -461,37 +461,6 @@ function addon:create_controls()
     controls_frame.shift_text:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF", 16)
     controls_frame.shift_text:SetPoint("LEFT", controls_frame.shift_cb, "RIGHT", 4, 0)
 
-    -- Create a CMD (Meta) checkbox for macOS support
-    controls_frame.cmd_cb = CreateFrame("CheckButton", nil, controls_frame, "UICheckButtonArtTemplate")
-    controls_frame.cmd_cb:SetSize(32, 36)
-    controls_frame.cmd_cb:SetHitRectInsets(0, 0, 0, -10)
-    controls_frame.cmd_cb:SetPoint("CENTER", controls_frame.shift_cb, "CENTER", 80, 0)
-
-    -- Set the OnClick script for the checkbutton
-    controls_frame.cmd_cb:SetScript("OnClick", function(s)
-        if s:GetChecked() then
-            -- Set CMD modifier and update checkbox state
-            addon.modif.CMD = true
-            addon.cmd_checkbox = true
-        else
-            -- Disable CMD modifier and reset checkbox state
-            addon.modif.CMD = false
-            addon.cmd_checkbox = false
-        end
-
-        -- Update the current modifier string and refresh keys based on the new state
-        addon:update_modifier_string()
-        addon:refresh_keys()
-    end)
-
-    SetCheckboxTooltip(controls_frame.cmd_cb, "Toggle CMD (Meta) key modifier (macOS)")
-
-    -- Create a font string for the text "CMD" and position it below the checkbutton
-    controls_frame.cmd_text = controls_frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    controls_frame.cmd_text:SetText("CMD")
-    controls_frame.cmd_text:SetFont(addon:GetCustomFont(), 16)
-    controls_frame.cmd_text:SetPoint("LEFT", controls_frame.cmd_cb, "RIGHT", 4, 0)
-
         -- Set the initial height based on expanded settings
     if keyui_settings.controls_expanded == true then
         controls_frame:SetHeight(320)
@@ -562,9 +531,6 @@ function addon:create_controls()
 
             controls_frame.shift_cb:Hide()
             controls_frame.shift_text:Hide()
-
-            controls_frame.cmd_cb:Hide()
-            controls_frame.cmd_text:Hide()
 
             controls_frame.expander_text:SetPoint("CENTER", controls_frame, "TOP", 0, collapsed_y)
         end

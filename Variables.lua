@@ -30,8 +30,6 @@ function addon:InitializeGeneralSettings()
     set_if_nil("listen_to_modifier", true)
     set_if_nil("dynamic_modifier", false)
     set_if_nil("controls_expanded", false)
-    set_if_nil("custom_font", "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF")
-    set_if_nil("custom_font_condensed", "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF")
 end
 
 -- Initialize key binding and layout settings
@@ -75,7 +73,7 @@ addon.bonusbar_offset = {}
 addon.current_actionbar_page = {}
 addon.class_name = {}
 
-addon.modif = addon.modif or { ALT = false, CTRL = false, SHIFT = false, CMD = false }
+addon.modif = addon.modif or { ALT = false, CTRL = false, SHIFT = false }
 addon.current_modifier_string = ""
 addon.alt_checkbox = false
 addon.ctrl_checkbox = false

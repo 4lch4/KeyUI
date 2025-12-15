@@ -413,7 +413,7 @@ function addon:create_mouse_buttons()
 
     -- Font string to display the interface action text (toggled by function addon:create_action_labels)
     mouse_button.readable_binding = mouse_button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    mouse_button.readable_binding:SetFont(addon:GetCustomFontCondensed(), 12, "OUTLINE")
+    mouse_button.readable_binding:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF", 12, "OUTLINE")
     mouse_button.readable_binding:SetTextColor(1, 1, 1)
     mouse_button.readable_binding:SetHeight(25)
     --mouse_button.readable_binding:SetWidth(46)    -- will be calculated in addon:create_action_labels
