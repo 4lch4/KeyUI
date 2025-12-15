@@ -112,6 +112,22 @@ end
 local BUTTON_TEXTURE = "Interface/Buttons/Dropdown"
 local DEFAULT_FONT = "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF"
 
+-- Helper function to get the custom font from settings
+function addon:GetCustomFont()
+    if not keyui_settings then
+        return DEFAULT_FONT
+    end
+    return keyui_settings.custom_font or DEFAULT_FONT
+end
+
+-- Helper function to get the custom condensed font from settings
+function addon:GetCustomFontCondensed()
+    if not keyui_settings then
+        return "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF"
+    end
+    return keyui_settings.custom_font_condensed or "Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF"
+end
+
 local TEX_COORDS = {
     normal_left = { 0.03125, 0.53125, 0.470703, 0.560547 },
     normal_right = { 0.03125, 0.53125, 0.751953, 0.841797 },
@@ -165,7 +181,7 @@ function addon:CreateStyledButton(parent, options)
         button:SetPoint(unpack(options.point))
     end
 
-    local font = options.font or DEFAULT_FONT
+    local font = options.font or addon:GetCustomFont()
     local fontSize = options.fontSize or 16
     local textOffsetX = options.textOffsetX or 0
     local textOffsetY = options.textOffsetY or 0

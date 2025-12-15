@@ -457,7 +457,7 @@ function addon:create_keyboard_buttons()
 
     -- Font string to display the interface action text (toggled by function addon:create_action_labels)
     keyboard_button.readable_binding = keyboard_button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    keyboard_button.readable_binding:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Condensed.TTF", 12, "OUTLINE")
+    keyboard_button.readable_binding:SetFont(addon:GetCustomFontCondensed(), 12, "OUTLINE")
     keyboard_button.readable_binding:SetTextColor(1, 1, 1)
     keyboard_button.readable_binding:SetHeight(30)
     --keyboard_button.readable_binding:SetWidth(56)     -- will be calculated in addon:create_action_labels

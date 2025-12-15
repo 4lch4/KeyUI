@@ -44,7 +44,7 @@ function addon:create_selection_frame()
     local instructions_text = top_frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     instructions_text:SetPoint("CENTER", top_frame, "CENTER", 0, 0)
     instructions_text:SetText("Select One or More Devices to Visualize")
-    instructions_text:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF", 28)
+    instructions_text:SetFont(addon:GetCustomFont(), 28)
     instructions_text:SetTextColor(1, 1, 1, 1)
 
     -- Create a secondary frame at the bottom for instructions and buttons
@@ -128,7 +128,7 @@ function addon:create_selection_frame()
         -- Add a label text to the frame
         local label = selection_backdrop_frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         label:SetText(label_text)
-        label:SetFont("Interface\\AddOns\\KeyUI\\Media\\Fonts\\Expressway Regular.TTF", 22, "OUTLINE")
+        label:SetFont(addon:GetCustomFont(), 22, "OUTLINE")
         label:SetTextColor(1, 1, 1, 1)
         label:SetPoint("TOPLEFT", selection_backdrop_frame, "TOPLEFT", 20, -20)
 
